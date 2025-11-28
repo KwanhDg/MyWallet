@@ -7,34 +7,30 @@
       "use": "@vercel/static"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/frontend/secure-index.html"
+      "source": "/",
+      "destination": "/frontend/secure-index.html"
     },
     {
-      "src": "/secure",
-      "dest": "/frontend/secure-index.html"
+      "source": "/secure",
+      "destination": "/frontend/secure-index.html"
     },
     {
-      "src": "/standard",
-      "dest": "/frontend/index.html"
+      "source": "/standard",
+      "destination": "/frontend/index.html"
     },
     {
-      "src": "/demo",
-      "dest": "/frontend/crypto-demo.html"
+      "source": "/demo",
+      "destination": "/frontend/crypto-demo.html"
     },
     {
-      "src": "/js/(.*)",
-      "dest": "/frontend/js/$1"
+      "source": "/js/(.*)",
+      "destination": "/frontend/js/$1"
     },
     {
-      "src": "/(.*)\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)",
-      "dest": "/frontend/$1.$2"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/secure-index.html"
+      "source": "/(.*)",
+      "destination": "/frontend/secure-index.html"
     }
   ],
   "headers": [
