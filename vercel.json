@@ -1,12 +1,5 @@
 {
   "version": 2,
-  "name": "hust-secure-wallet",
-  "builds": [
-    {
-      "src": "frontend/**/*",
-      "use": "@vercel/static"
-    }
-  ],
   "rewrites": [
     {
       "source": "/",
