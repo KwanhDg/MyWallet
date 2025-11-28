@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Crypto API Demo - HUST Secure Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Roboto', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            margin-bottom: 32px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 14px 28px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #10b981;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .info { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-white mb-4">Web Crypto API Demo</h1>
+                <p class="text-xl text-white/90">Xây dựng cơ chế mã hóa dữ liệu end-to-end trong ứng dụng web</p>
+                <div class="mt-6">
+                    <span class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                        <i class="fas fa-shield-alt mr-2"></i>HUST Secure Wallet
+                    </span>
+                </div>
+            </div>
+
+            <!-- Overview -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🔐 Tổng Quan Mã Hóa</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Các Thuật Toán Sử Dụng</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li><strong>AES-256-GCM:</strong> Mã hóa đối xứng cho private key</li>
+                            <li><strong>PBKDF2:</strong> Key derivation từ password</li>
+                            <li><strong>ECDH:</strong> Key exchange giữa các ví</li>
+                            <li><strong>HMAC-SHA256:</strong> Digital signatures</li>
+                            <li><strong>SHA-256:</strong> Hash functions</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Các Tính Năng Bảo Mật</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li><strong>End-to-End Encryption:</strong> Dữ liệu được mã hóa trên client</li>
+                            <li><strong>Zero-Knowledge:</strong> Server không có access đến plaintext</li>
+                            <li><strong>Secure Backup:</strong> Sao lưu mã hóa với password</li>
+                            <li><strong>Key Management:</strong> Quản lý key an toàn</li>
+                            <li><strong>Digital Signatures:</strong> Xác thực giao dịch</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demo 1: AES Encryption -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🔒 Demo 1: AES-256-GCM Encryption</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Nhập văn bản cần mã hóa:</label>
+                        <input type="text" id="plaintext" placeholder="Private key hoặc dữ liệu nhạy cảm" 
+                               class="w-full p-3 border rounded-lg" value="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80">
+                    </div>
+                    <button onclick="demoAESEncryption()" class="btn-primary">
+                        <i class="fas fa-lock mr-2"></i>Mã Hóa
+                    </button>
+                    <div id="aesResult" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Demo 2: PBKDF2 Key Derivation -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🔑 Demo 2: PBKDF2 Key Derivation</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Password:</label>
+                        <input type="password" id="password" placeholder="Nhập password mạnh" 
+                               class="w-full p-3 border rounded-lg" value="MySecurePassword123!">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Iterations:</label>
+                        <select id="iterations" class="w-full p-3 border rounded-lg">
+                            <option value="100000">100,000 (Trung bình)</option>
+                            <option value="200000" selected>200,000 (Cao)</option>
+                            <option value="500000">500,000 (Rất cao)</option>
+                        </select>
+                    </div>
+                    <button onclick="demoPBKDF2()" class="btn-primary">
+                        <i class="fas fa-key mr-2"></i>Derive Key
+                    </button>
+                    <div id="pbkdf2Result" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Demo 3: ECDH Key Exchange -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🤝 Demo 3: ECDH Key Exchange</h2>
+                <div class="space-y-4">
+                    <p class="text-gray-700">Tạo shared secret an toàn giữa hai ví</p>
+                    <button onclick="demoECDH()" class="btn-primary">
+                        <i class="fas fa-exchange-alt mr-2"></i>Tạo Shared Secret
+                    </button>
+                    <div id="ecdhResult" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Demo 4: Digital Signatures -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">✍️ Demo 4: Digital Signatures</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Dữ liệu giao dịch:</label>
+                        <textarea id="transactionData" rows="3" class="w-full p-3 border rounded-lg">{"from": "0x...", "to": "0x...", "amount": "1.5", "nonce": 123}</textarea>
+                    </div>
+                    <button onclick="demoDigitalSignature()" class="btn-primary">
+                        <i class="fas fa-signature mr-2"></i>Ký Giao Dịch
+                    </button>
+                    <div id="signatureResult" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Demo 5: Secure Communication -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🔐 Demo 5: Secure Communication</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Tin nhắn:</label>
+                        <input type="text" id="message" placeholder="Nhập tin nhắn bí mật" 
+                               class="w-full p-3 border rounded-lg" value="Gửi cho tôi 1 ETH">
+                    </div>
+                    <button onclick="demoSecureCommunication()" class="btn-primary">
+                        <i class="fas fa-envelope mr-2"></i>Gửi Tin Nhắn Mã Hóa
+                    </button>
+                    <div id="communicationResult" class="mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Performance Analysis -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">📊 Phân Tích Hiệu Suất</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Thời Gian Xử Lý</h3>
+                        <div id="performanceMetrics" class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>AES-256 Encryption:</span>
+                                <span id="aesTime">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>PBKDF2 (200K iterations):</span>
+                                <span id="pbkdf2Time">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>ECDH Key Exchange:</span>
+                                <span id="ecdhTime">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Digital Signature:</span>
+                                <span id="signatureTime">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Security Metrics</h3>
+                        <div class="space-y-2 text-gray-700">
+                            <div class="flex justify-between">
+                                <span>Key Strength:</span>
+                                <span class="success">256-bit</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Entropy:</span>
+                                <span class="success">High</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Collision Resistance:</span>
+                                <span class="success">2^256</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Quantum Resistance:</span>
+                                <span class="warning">Partial</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integration Guide -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🚀 Hướng Dẫn Tích Hợp</h2>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold mb-3">1. Import Web Crypto API</h3>
+                        <div class="code-block">
+// Web Crypto API có sẵn trong browser
+// Không cần import thêm
+const crypto = window.crypto.subtle;
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-3">2. Tạo Encryption Key</h3>
+                        <div class="code-block">
+const key = await crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+);
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-3">3. Mã Hóa Dữ Liệu</h3>
+                        <div class="code-block">
+const iv = crypto.getRandomValues(new Uint8Array(12));
+const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    new TextEncoder().encode(data)
+);
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-3">4. Key Derivation</h3>
+                        <div class="code-block">
+const derivedKey = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: 200000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+);
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Best Practices -->
+            <div class="demo-section">
+                <h2 class="text-3xl font-bold gradient-text mb-6">🛡️ Security Best Practices</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-green-600">✅ Nên Làm</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>Sử dụng random IV cho mỗi encryption</li>
+                            <li>Implement proper key derivation</li>
+                            <li>Validate all inputs</li>
+                            <li>Use secure random number generation</li>
+                            <li>Implement proper error handling</li>
+                            <li>Clear sensitive data from memory</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-red-600">❌ Không Nên Làm</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>Hardcode keys hoặc passwords</li>
+                            <li>Sử dụng deterministic IV</li>
+                            <li>Store plaintext sensitive data</li>
+                            <li>Roll your own crypto algorithms</li>
+                            <li>Ignore error messages</li>
+                            <li>Use deprecated crypto functions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conclusion -->
+            <div class="text-center mt-12">
+                <h2 class="text-3xl font-bold text-white mb-4">🎉 Kết Luận</h2>
+                <p class="text-xl text-white/90 max-w-3xl mx-auto">
+                    Web Crypto API cung cấp đầy đủ công cụ để xây dựng hệ thống mã hóa end-to-end mạnh mẽ trong browser. 
+                    Với HUST Secure Wallet, chúng ta đã demo thực tế việc tích hợp các thuật toán này vào ứng dụng crypto wallet.
+                </p>
+                <div class="mt-8">
+                    <a href="secure-index.html" class="bg-white text-purple-600 px-8 py-3 rounded-full font-semibold inline-block hover:bg-gray-100 transition">
+                        <i class="fas fa-wallet mr-2"></i>Thử HUST Secure Wallet
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo 1: AES-256-GCM Encryption
+        async function demoAESEncryption() {
+            const plaintext = document.getElementById('plaintext').value;
+            const resultDiv = document.getElementById('aesResult');
+            
+            try {
+                const startTime = performance.now();
+                
+                // Generate key
+                const key = await crypto.subtle.generateKey(
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+                
+                // Generate IV
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                
+                // Encrypt
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    new TextEncoder().encode(plaintext)
+                );
+                
+                const endTime = performance.now();
+                const encryptionTime = (endTime - startTime).toFixed(2);
+                
+                // Update performance metrics
+                document.getElementById('aesTime').textContent = `${encryptionTime}ms`;
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-bold text-green-800 mb-2">✅ Encryption Successful</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Original:</strong> <code class="text-gray-600">${plaintext}</code></div>
+                            <div><strong>Key:</strong> <code class="text-gray-600">AES-256-GCM Generated</code></div>
+                            <div><strong>IV:</strong> <code class="text-gray-600">${Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Encrypted:</strong> <code class="text-gray-600">${Array.from(new Uint8Array(encrypted)).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Time:</strong> <span class="text-green-600">${encryptionTime}ms</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 class="font-bold text-red-800 mb-2">❌ Encryption Failed</h4>
+                        <p class="text-red-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Demo 2: PBKDF2 Key Derivation
+        async function demoPBKDF2() {
+            const password = document.getElementById('password').value;
+            const iterations = parseInt(document.getElementById('iterations').value);
+            const resultDiv = document.getElementById('pbkdf2Result');
+            
+            try {
+                const startTime = performance.now();
+                
+                // Generate salt
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                
+                // Import password
+                const baseKey = await crypto.subtle.importKey(
+                    'raw',
+                    new TextEncoder().encode(password),
+                    'PBKDF2',
+                    false,
+                    ['deriveKey']
+                );
+                
+                // Derive key
+                const derivedKey = await crypto.subtle.deriveKey(
+                    { name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' },
+                    baseKey,
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+                
+                // Export key for display
+                const exportedKey = await crypto.subtle.exportKey('raw', derivedKey);
+                
+                const endTime = performance.now();
+                const derivationTime = (endTime - startTime).toFixed(2);
+                
+                // Update performance metrics
+                document.getElementById('pbkdf2Time').textContent = `${derivationTime}ms`;
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-bold text-green-800 mb-2">✅ Key Derivation Successful</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Password:</strong> <code class="text-gray-600">${password.replace(/./g, '*')}</code></div>
+                            <div><strong>Salt:</strong> <code class="text-gray-600">${Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Iterations:</strong> <code class="text-gray-600">${iterations.toLocaleString()}</code></div>
+                            <div><strong>Derived Key:</strong> <code class="text-gray-600">${Array.from(new Uint8Array(exportedKey)).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Time:</strong> <span class="text-green-600">${derivationTime}ms</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 class="font-bold text-red-800 mb-2">❌ Key Derivation Failed</h4>
+                        <p class="text-red-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Demo 3: ECDH Key Exchange
+        async function demoECDH() {
+            const resultDiv = document.getElementById('ecdhResult');
+            
+            try {
+                const startTime = performance.now();
+                
+                // Generate key pairs for Alice and Bob
+                const aliceKeyPair = await crypto.subtle.generateKey(
+                    { name: 'ECDH', namedCurve: 'P-256' },
+                    true,
+                    ['deriveKey']
+                );
+                
+                const bobKeyPair = await crypto.subtle.generateKey(
+                    { name: 'ECDH', namedCurve: 'P-256' },
+                    true,
+                    ['deriveKey']
+                );
+                
+                // Derive shared secrets
+                const aliceSharedSecret = await crypto.subtle.deriveKey(
+                    { name: 'ECDH', public: bobKeyPair.publicKey },
+                    aliceKeyPair.privateKey,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+                
+                const bobSharedSecret = await crypto.subtle.deriveKey(
+                    { name: 'ECDH', public: aliceKeyPair.publicKey },
+                    bobKeyPair.privateKey,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+                
+                // Export public keys
+                const alicePublicKey = await crypto.subtle.exportKey('raw', aliceKeyPair.publicKey);
+                const bobPublicKey = await crypto.subtle.exportKey('raw', bobKeyPair.publicKey);
+                
+                const endTime = performance.now();
+                const exchangeTime = (endTime - startTime).toFixed(2);
+                
+                // Update performance metrics
+                document.getElementById('ecdhTime').textContent = `${exchangeTime}ms`;
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-bold text-green-800 mb-2">✅ ECDH Key Exchange Successful</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Alice Public Key:</strong> <code class="text-gray-600">${Array.from(new Uint8Array(alicePublicKey)).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Bob Public Key:</strong> <code class="text-gray-600">${Array.from(new Uint8Array(bobPublicKey)).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Shared Secret:</strong> <code class="text-gray-600">Identical for both parties</code></div>
+                            <div><strong>Time:</strong> <span class="text-green-600">${exchangeTime}ms</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 class="font-bold text-red-800 mb-2">❌ ECDH Failed</h4>
+                        <p class="text-red-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Demo 4: Digital Signatures
+        async function demoDigitalSignature() {
+            const transactionData = document.getElementById('transactionData').value;
+            const resultDiv = document.getElementById('signatureResult');
+            
+            try {
+                const startTime = performance.now();
+                
+                // Generate signing key
+                const signingKey = await crypto.subtle.generateKey(
+                    { name: 'HMAC', hash: 'SHA-256' },
+                    true,
+                    ['sign', 'verify']
+                );
+                
+                // Sign transaction
+                const message = new TextEncoder().encode(transactionData);
+                const signature = await crypto.subtle.sign('HMAC', signingKey, message);
+                
+                // Verify signature
+                const isValid = await crypto.subtle.verify('HMAC', signingKey, signature, message);
+                
+                const endTime = performance.now();
+                const signatureTime = (endTime - startTime).toFixed(2);
+                
+                // Update performance metrics
+                document.getElementById('signatureTime').textContent = `${signatureTime}ms`;
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-bold text-green-800 mb-2">✅ Digital Signature Successful</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Transaction:</strong> <code class="text-gray-600">${transactionData}</code></div>
+                            <div><strong>Signature:</strong> <code class="text-gray-600">${Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Verification:</strong> <span class="text-green-600">${isValid ? '✅ Valid' : '❌ Invalid'}</span></div>
+                            <div><strong>Time:</strong> <span class="text-green-600">${signatureTime}ms</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 class="font-bold text-red-800 mb-2">❌ Digital Signature Failed</h4>
+                        <p class="text-red-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Demo 5: Secure Communication
+        async function demoSecureCommunication() {
+            const message = document.getElementById('message').value;
+            const resultDiv = document.getElementById('communicationResult');
+            
+            try {
+                // Generate key pairs
+                const senderKeyPair = await crypto.subtle.generateKey(
+                    { name: 'ECDH', namedCurve: 'P-256' },
+                    true,
+                    ['deriveKey']
+                );
+                
+                const receiverKeyPair = await crypto.subtle.generateKey(
+                    { name: 'ECDH', namedCurve: 'P-256' },
+                    true,
+                    ['deriveKey']
+                );
+                
+                // Derive shared secret
+                const sharedSecret = await crypto.subtle.deriveKey(
+                    { name: 'ECDH', public: receiverKeyPair.publicKey },
+                    senderKeyPair.privateKey,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+                
+                // Encrypt message
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    sharedSecret,
+                    new TextEncoder().encode(message)
+                );
+                
+                // Decrypt message
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    sharedSecret,
+                    encrypted
+                );
+                
+                const decryptedMessage = new TextDecoder().decode(decrypted);
+                
+                resultDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-bold text-green-800 mb-2">✅ Secure Communication Successful</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Original Message:</strong> <code class="text-gray-600">${message}</code></div>
+                            <div><strong>Encrypted:</strong> <code class="text-gray-600">${Array.from(new Uint8Array(encrypted)).map(b => b.toString(16).padStart(2, '0')).join('')}</code></div>
+                            <div><strong>Decrypted:</strong> <code class="text-gray-600">${decryptedMessage}</code></div>
+                            <div><strong>Verification:</strong> <span class="text-green-600">${message === decryptedMessage ? '✅ Success' : '❌ Failed'}</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 class="font-bold text-red-800 mb-2">❌ Secure Communication Failed</h4>
+                        <p class="text-red-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

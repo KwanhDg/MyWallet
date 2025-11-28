@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test JS</title>
+    <script>
+        // Simple test to check if JS is working
+        document.addEventListener('DOMContentLoaded', () => {
+            const testDiv = document.createElement('div');
+            testDiv.textContent = 'JavaScript is working!';
+            testDiv.style.color = 'green';
+            testDiv.style.fontSize = '24px';
+            testDiv.style.padding = '20px';
+            document.body.appendChild(testDiv);
+
+            // Check if wallet object exists
+            try {
+                if (typeof wallet !== 'undefined') {
+                    const walletDiv = document.createElement('div');
+                    walletDiv.textContent = '✅ Wallet object exists!';
+                    walletDiv.style.color = 'blue';
+                    walletDiv.style.fontSize = '20px';
+                    walletDiv.style.padding = '15px';
+                    document.body.appendChild(walletDiv);
+                    
+                    // Test if showDashboard exists
+                    if (typeof wallet.showDashboard === 'function') {
+                        const funcDiv = document.createElement('div');
+                        funcDiv.textContent = '✅ showDashboard function exists!';
+                        funcDiv.style.color = 'green';
+                        funcDiv.style.fontSize = '18px';
+                        document.body.appendChild(funcDiv);
+                    }
+                } else {
+                    const noWalletDiv = document.createElement('div');
+                    noWalletDiv.textContent = '❌ Wallet object does NOT exist!';
+                    noWalletDiv.style.color = 'red';
+                    noWalletDiv.style.fontSize = '20px';
+                    noWalletDiv.style.padding = '15px';
+                    document.body.appendChild(noWalletDiv);
+                }
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.textContent = '❌ Error: ' + error.message;
+                errorDiv.style.color = 'red';
+                errorDiv.style.fontSize = '16px';
+                errorDiv.style.padding = '15px';
+                errorDiv.style.whiteSpace = 'pre';
+                errorDiv.style.fontFamily = 'monospace';
+                document.body.appendChild(errorDiv);
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>JavaScript Test Page</h1>
+    <p>This page tests if JavaScript is working correctly.</p>
+    
+    <!-- Load the app.js file with error handling -->
+    <script>
+        window.addEventListener('error', function(e) {
+            const errorDiv = document.createElement('div');
+            errorDiv.textContent = '❌ Script Error: ' + e.message + '\n' + 
+                                 'In ' + (e.filename || 'unknown') + ' line ' + e.lineno;
+            errorDiv.style.color = 'red';
+            errorDiv.style.fontSize = '16px';
+            errorDiv.style.padding = '15px';
+            errorDiv.style.whiteSpace = 'pre';
+            errorDiv.style.fontFamily = 'monospace';
+            document.body.appendChild(errorDiv);
+            console.error('Global error:', e);
+        });
+    </script>
+    <script src="./js/app.js"></script>
+    <script>
+        // Try to initialize wallet if it exists
+        if (typeof Wallet === 'function') {
+            window.wallet = new Wallet();
+            if (typeof wallet.init === 'function') {
+                wallet.init();
+            }
+        }
+    </script>
+</body>
+</html>

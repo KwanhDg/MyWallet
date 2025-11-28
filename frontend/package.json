@@ -1,0 +1,18 @@
+{
+  "name": "hust-wallet-frontend",
+  "version": "1.0.0",
+  "description": "Frontend cho HUST Secure Wallet - Web Crypto API Demo",
+  "scripts": {
+    "dev": "start http://localhost:3000/secure-index.html && python -m http.server 3000 --directory .",
+    "start": "python -m http.server 3000 --directory .",
+    "dev-secure": "start http://localhost:3000/secure-index.html && python -m http.server 3000 --directory .",
+    "dev-standard": "start http://localhost:3000/index.html && python -m http.server 3000 --directory .",
+    "dev-demo": "start http://localhost:3000/crypto-demo.html && python -m http.server 3000 --directory .",
+    "open-secure": "start http://localhost:3000/secure-index.html",
+    "open-standard": "start http://localhost:3000/index.html",
+    "open-demo": "start http://localhost:3000/crypto-demo.html"
+  },
+  "keywords": ["wallet", "ethereum", "hust", "secure", "web-crypto-api", "encryption"],
+  "author": "",
+  "license": "MIT"
+}
