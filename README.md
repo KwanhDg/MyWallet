@@ -101,26 +101,6 @@ d:\Workspace\MyWallet\
 └── README.md                   # This file
 ```
 
-## 🎓 Context Môn Học
-
-### Problem Statement
-- **Current Issue**: Ví tiền điện tử thường lưu private key plaintext
-- **Security Risk**: Vulnerable to malware, keyloggers, data breaches
-- **Solution**: Implement end-to-end encryption với Web Crypto API
-
-### Implementation Approach
-1. **Theory**: Study Web Crypto API standards
-2. **Practice**: Implement secure wallet with real algorithms  
-3. **Demo**: Interactive educational page
-4. **Comparison**: Show security improvements
-
-### Academic Value
-- ✅ **Real-world Application**: Không chỉ là demo
-- ✅ **Advanced Cryptography**: Industry-standard algorithms
-- ✅ **Complete Implementation**: Theory → Practice
-- ✅ **Security Focus**: Proper key management
-- ✅ **Performance Analysis**: Real-world metrics
-
 ## 🔧 Technical Implementation
 
 ### Web Crypto API Integration
@@ -150,17 +130,18 @@ const derivedKey = await crypto.subtle.deriveKey(
 
 ## 🧪 Testing & Demo
 
-### Test Scenarios
-1. **Create Secure Wallet**: Test password-based encryption
-2. **Import Secure Wallet**: Test decryption & validation
-3. **Send/Receive Transactions**: Test with encrypted keys
-4. **Secure Backup**: Test encrypted wallet export
-5. **Performance**: Measure encryption/decryption times
+<img width="1887" height="920" alt="Screenshot 2025-11-30 114551" src="https://github.com/user-attachments/assets/90ec5315-ce2f-4cd6-858f-f87bca4822f5" />
+<img width="1883" height="916" alt="Screenshot 2025-11-30 114647" src="https://github.com/user-attachments/assets/5639fdb0-4f0e-42cb-a4b9-822325e09d9e" />
+<img width="1897" height="919" alt="Screenshot 2025-11-30 114823" src="https://github.com/user-attachments/assets/8812ed62-8826-49a2-984b-9abf8d0361ff" />
+<img width="1888" height="920" alt="Screenshot 2025-11-30 114938" src="https://github.com/user-attachments/assets/ff73a5ff-f85b-4c9b-b544-694cbc3a9fcd" />
+<img width="1881" height="898" alt="Screenshot 2025-11-30 115022" src="https://github.com/user-attachments/assets/d70889da-4e6e-4e43-85a6-9a4621d55baf" />
+<img width="1884" height="899" alt="Screenshot 2025-11-30 115204" src="https://github.com/user-attachments/assets/5efb1e3c-f78b-4769-9060-26b93513cc47" />
+<img width="1880" height="913" alt="Screenshot 2025-11-30 115309" src="https://github.com/user-attachments/assets/23119049-6092-4cd9-ab03-254b3c972256" />
 
-### Demo Flow
-1. **Show Problem**: `index.html` (vulnerable wallet)
-2. **Show Theory**: `crypto-demo.html` (algorithm demos)
-3. **Show Solution**: `secure-index.html` (secure wallet)
+**TEST BẢO MÂT**
+<img width="1916" height="911" alt="Screenshot 2025-12-08 214855" src="https://github.com/user-attachments/assets/b02e951c-d4c2-459d-87f0-f5b1b33b5f13" />
+<img width="1913" height="920" alt="Screenshot 2025-12-08 214905" src="https://github.com/user-attachments/assets/9f029405-231c-4d42-8951-e1818c1bfb92" />
+
 
 ## 🛠️ Khắc Phục Sự Cố
 
@@ -195,36 +176,3 @@ Tham khảo `crypto-demo.html` để xem real-world performance:
 - **ECDH Key Exchange**: ~10-30ms
 - **Digital Signature**: ~2-8ms
 
-## 🎯 Next Steps
-
-### For Production
-- [ ] Implement quantum-resistant algorithms
-- [ ] Add multi-signature support
-- [ ] Implement hardware wallet integration
-- [ ] Add audit logging
-
-### For Academic Enhancement  
-- [ ] Zero-knowledge proofs demo
-- [ ] Secure multi-party computation
-- [ ] Advanced threat modeling
-- [ ] Performance optimization
-
-## 🤝 Hỗ Trợ
-
-### Academic Context
-- **Môn học**: Phát triển phần mềm web an toàn
-- **Giảng viên**: [Tên giảng viên]
-- **Đề tài**: Xây dựng cơ chế mã hóa dữ liệu end-to-end
-
-### Technical Support
-- **Issues**: Report trên project repository
-- **Documentation**: Xem `crypto-demo.html` for detailed examples
-- **Security**: Follow best practices in Security section
-
-## 📜 Giấy Phép
-
-MIT License - Developed for educational purposes at HUST
-
----
-
-**🚀 Ready to demo! Run `npm run dev` to start the secure wallet experience!**
