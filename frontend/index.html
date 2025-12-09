@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUST Secure Wallet - Ví Mã Hóa End-to-End</title>
+    <title>HUST Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,15 +14,14 @@
         h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #1a1a1a;
         }
 
         .glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .gradient-primary {
@@ -36,33 +35,19 @@
             background-clip: text;
         }
 
-        .gradient-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .gradient-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .fade-in { animation: fadeIn 0.6s ease-out; }
-        .pulse { animation: pulse 2s infinite; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             font-weight: 600;
-            border-radius: 12px;
-            padding: 14px 28px;
+            border-radius: 8px;
+            padding: 12px 24px;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -78,8 +63,8 @@
             background: white;
             border: 2px solid #667eea;
             color: #667eea;
-            border-radius: 12px;
-            padding: 12px 24px;
+            border-radius: 8px;
+            padding: 10px 20px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -90,127 +75,37 @@
             color: white;
         }
 
-        .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            font-weight: 600;
-            border-radius: 12px;
-            padding: 14px 28px;
-            border: none;
-            cursor: pointer;
+        input, textarea {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #1a1a1a;
+            border-radius: 8px;
+            padding: 12px 16px;
             transition: all 0.3s ease;
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            font-weight: 600;
-            border-radius: 12px;
-            padding: 14px 28px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .card {
             background: white;
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
 
         .card:hover {
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
-
-        .security-badge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .encryption-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(16, 185, 129, 0.1);
-            color: #059669;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .password-strength-weak { color: #ef4444; }
-        .password-strength-medium { color: #f59e0b; }
-        .password-strength-strong { color: #10b981; }
-
-        input, textarea, select {
-            background: white;
-            border: 2px solid #e5e7eb;
-            color: #1f2937;
-            border-radius: 12px;
-            padding: 16px 20px;
-            transition: all 0.3s ease;
-            font-size: 16px;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-
-        .feature-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 24px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .notification.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-        .notification.error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-        .notification.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
     </style>
 </head>
 <body>
     <div id="app"></div>
     <script src="./js/app.js"></script>
-    <script src="./js/secure-wallet.js"></script>
 </body>
 </html>

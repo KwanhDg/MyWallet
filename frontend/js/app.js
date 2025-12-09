@@ -124,23 +124,80 @@ class Wallet {
         }
     }
 
-    async getEthTransactions() {
+    async getEthTransactions(limit = 30) {
+    if (!this.provider || !this.wallet?.address) return [];
+
+    const address = this.wallet.address.toLowerCase();
+    const txs = [];
+
+    try {
+        const currentBlock = await this.provider.getBlockNumber();
+        const fromBlock = Math.max(0, currentBlock - 2000);
+
+        console.log(`Bắt đầu quét từ block ${currentBlock} về ${fromBlock}...`);
+
+        // Cách DUY NHẤT hoạt động ổn định với hardhat node + localhost
+        for (let i = currentBlock; i >= fromBlock; i--) {
+            try {
+                // Lấy block kèm FULL transaction objects
+                const block = await this.provider.send("eth_getBlockByNumber", [
+                    "0x" + i.toString(16),
+                    true   // true = full tx objects
+                ]);
+
+                if (!block?.transactions) continue;
+
+                for (const tx of block.transactions) {
+                    const from = tx.from?.toLowerCase();
+                    const to = (tx.to || "").toLowerCase();
+
+                    if (from === address || to === address) {
+                        txs.push({
+                            hash: tx.hash,
+                            type: from === address ? "Gửi" : "Nhận",
+                            counterparty: from === address ? tx.to : tx.from,
+                            amount: ethers.formatEther(tx.value || "0"),
+                            time: new Date(parseInt(block.timestamp) * 1000).toLocaleString("vi-VN")
+                        });
+                    }
+                }
+
+                if (txs.length >= limit) break;
+
+            } catch (e) {
+                // bỏ qua lỗi block
+            }
+        }
+
+        console.log(`HOÀN TẤT! Tìm thấy ${txs.length} giao dịch thật`);
+        return txs.reverse();
+
+        } catch (error) {
+            console.error("Lỗi getEthTransactions:", error);
+            return [];
+        }
+    }
+
+    async searchTransactionsByAddress() {
         try {
-            console.log('Fetching transactions for address:', this.wallet?.address);
+            console.log('Searching transactions for address:', this.wallet.address);
             const currentBlock = await this.provider.getBlockNumber();
-            console.log('Current block:', currentBlock);
+            const startBlock = Math.max(0, currentBlock - 5000); // Search last 5000 blocks
             
+            console.log(`Searching from block ${startBlock} to ${currentBlock}`);
+            
+            // Simple approach: extend the original search range
             const txs = [];
-            const startBlock = Math.max(0, currentBlock - 1000); // Check last 1000 blocks
+            const extendedStartBlock = Math.max(0, currentBlock - 5000);
             
-            // Get transactions from the last 1000 blocks
-            for (let blockNumber = currentBlock; blockNumber >= startBlock; blockNumber--) {
+            console.log(`Extended search from block ${extendedStartBlock} to ${currentBlock}`);
+            
+            for (let blockNumber = currentBlock; blockNumber >= extendedStartBlock; blockNumber--) {
                 try {
                     const block = await this.provider.getBlock(blockNumber, true);
                     if (!block || !block.transactions) continue;
                     
                     for (const tx of block.transactions) {
-                        // Check if transaction involves our wallet
                         const isFromWallet = tx.from && tx.from.toLowerCase() === this.wallet.address.toLowerCase();
                         const isToWallet = tx.to && tx.to.toLowerCase() === this.wallet.address.toLowerCase();
                         
@@ -149,42 +206,26 @@ class Wallet {
                                 hash: tx.hash,
                                 type: isFromWallet ? 'Gửi' : 'Nhận',
                                 counterparty: isFromWallet ? (tx.to || 'Hợp đồng') : (tx.from || 'Không xác định'),
-                                amount: ethers.formatEther(tx.value),
+                                amount: ethers.formatEther(tx.value || '0'),
                                 time: new Date(block.timestamp * 1000).toLocaleString('vi-VN')
                             });
                             
-                            if (txs.length >= 50) break; // Limit to 50 most recent transactions
+                            if (txs.length >= 50) break;
                         }
                     }
                     
                     if (txs.length >= 50) break;
                 } catch (error) {
-                    console.error(`Error processing block ${blockNumber}:`, error);
+                    console.error(`Error processing block ${blockNumber} in alternative search:`, error);
                 }
             }
             
-            console.log('Returning transactions:', txs.length);
-            return txs.reverse(); // Return most recent first
+            console.log(`Found ${txs.length} transactions with alternative method`);
+            return txs;
             
         } catch (error) {
-            console.error('Error in getEthTransactions:', error);
-            // Return some sample data for testing if there's an error
-            return [
-                {
-                    hash: '0x123...abc',
-                    type: 'Nhận',
-                    counterparty: '0xAbc...123',
-                    amount: '1.5',
-                    time: new Date().toLocaleString('vi-VN')
-                },
-                {
-                    hash: '0x456...def',
-                    type: 'Gửi',
-                    counterparty: '0xDef...456',
-                    amount: '0.5',
-                    time: new Date(Date.now() - 3600000).toLocaleString('vi-VN')
-                }
-            ];
+            console.error('Error in searchTransactionsByAddress:', error);
+            return [];
         }
     }
 
@@ -268,94 +309,117 @@ class Wallet {
             <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
                 <div class="w-full max-w-2xl fade-in">
                     <button onclick="wallet.showHome()" class="mb-6 btn-secondary">
-                        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+                        Quay lại
                     </button>
 
                     <div class="card">
                         <div class="text-center mb-8">
-                            <div class="text-6xl mb-4">🔐</div>
+                            <div class="text-6xl mb-4">Lock</div>
                             <h2 class="text-4xl font-bold mb-2">Tạo Ví An Toàn</h2>
                             <p class="text-gray-600">Tạo ví với mã hóa end-to-end</p>
                         </div>
 
-                        <form onsubmit="wallet.handleSecureCreate(event)" class="space-y-6">
-                            <!-- Password Input -->
+                        <div class="space-y-6">
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-3">
-                                    <i class="fas fa-lock mr-2"></i>Mật Khẩu
-                                </label>
-                                <input 
-                                    type="password" 
-                                    id="securePassword" 
-                                    required
-                                    minlength="8"
-                                    class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors"
-                                    placeholder="Nhập mật khẩu mạnh (ít nhất 8 ký tự)"
-                                    oninput="wallet.checkPasswordStrength(this.value)"
-                                >
-                                <div id="passwordStrength" class="mt-2"></div>
+                                <label class="block text-sm font-bold text-gray-700 mb-3">Mật Khẩu</label>
+                                <input type="password" id="securePassword" class="w-full p-4 border-2 border-gray-300 rounded-lg" placeholder="Nhập mật khẩu mạnh" required minlength="8">
+                                <div id="passwordStrength" class="mt-2 text-sm"></div>
                             </div>
 
-                            <!-- Confirm Password -->
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-3">
-                                    <i class="fas fa-lock mr-2"></i>Xác Nhận Mật Khẩu
-                                </label>
-                                <input 
-                                    type="password" 
-                                    id="confirmSecurePassword" 
-                                    required
-                                    minlength="8"
-                                    class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors"
-                                    placeholder="Nhập lại mật khẩu"
-                                >
+                                <label class="block text-sm font-bold text-gray-700 mb-3">Xác Nhận Mật Khẩu</label>
+                                <input type="password" id="confirmPassword" class="w-full p-4 border-2 border-gray-300 rounded-lg" placeholder="Nhập lại mật khẩu">
                             </div>
 
-                            <!-- Security Level -->
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-3">
-                                    <i class="fas fa-shield-alt mr-2"></i>Mức Độ Bảo Mật
-                                </label>
-                                <select id="securityLevel" class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors">
-                                    <option value="medium">Trung bình (100,000 iterations)</option>
-                                    <option value="high" selected>Cao (200,000 iterations)</option>
+                                <label class="block text-sm font-bold text-gray-700 mb-3">Mức Độ Bảo Mật</label>
+                                <select id="securityLevel" class="w-full p-4 border-2 border-gray-300 rounded-lg">
+                                    <option value="high">Cao (200.000 iterations)</option>
+                                    <option value="medium">Trung bình (100.000 iterations)</option>
                                 </select>
                             </div>
 
-                            <!-- Security Info -->
-                            <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-                                <h4 class="font-bold text-blue-900 mb-3">
-                                    <i class="fas fa-info-circle mr-2"></i>Thông Tin Bảo Mật
-                                </h4>
-                                <ul class="text-sm text-blue-800 space-y-2">
-                                    <li>• Private key được mã hóa bằng AES-256-GCM</li>
-                                    <li>• Key derivation sử dụng PBKDF2</li>
-                                    <li>• Mật khẩu không được lưu trữ</li>
-                                    <li>• Recovery phrase được tạo tự động</li>
+                            <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 text-sm">
+                                <ul class="space-y-1 text-blue-800">
+                                    <li>• Private key mã hóa AES-256-GCM</li>
+                                    <li>• Key derivation: PBKDF2</li>
+                                    <li>• Recovery phrase tự động</li>
                                 </ul>
                             </div>
 
-                            <button type="submit" class="w-full btn-primary py-4 text-lg font-semibold">
-                                <i class="fas fa-shield-alt mr-2"></i> Tạo Ví An Toàn
+                            <button type="button" id="createSecureBtn" class="w-full btn-primary py-4 text-lg font-semibold">
+                                Tạo Ví An Toàn
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+
+        // === BẮT ĐẦU FIX CHẮN CHẮN ===
+        const passwordInput = document.getElementById('securePassword');
+        const confirmInput = document.getElementById('confirmPassword');
+        const levelSelect = document.getElementById('securityLevel');
+        const strengthDiv = document.getElementById('passwordStrength');
+        const createBtn = document.getElementById('createSecureBtn');
+
+        // Hiển thị độ mạnh mật khẩu
+        passwordInput.addEventListener('input', () => {
+            if (typeof wallet.checkPasswordStrength === 'function') {
+                wallet.checkPasswordStrength(passwordInput.value);
+            }
+        });
+
+        // Xử lý tạo ví – BẮT BUỘC CÓ AWAIT + TRY/CATCH
+        createBtn.addEventListener('click', async () => {
+            const password = passwordInput.value.trim();
+            const confirm = confirmInput.value.trim();
+            const level = levelSelect.value;
+
+            if (!password || password.length < 8) {
+                wallet.showError('Mật khẩu phải có ít nhất 8 ký tự');
+                return;
+            }
+            if (password !== confirm) {
+                wallet.showError('Mật khẩu xác nhận không khớp!');
+                return;
+            }
+
+            createBtn.disabled = true;
+            createBtn.innerHTML = 'Đang tạo ví an toàn...';
+
+            try {
+                // Đặt mức bảo mật
+                wallet.securityLevel = level;
+
+                // GỌI ĐÚNG HÀM VÀ AWAIT ĐÚNG CÁCH
+                const result = await wallet.createSecureWallet(password, password);
+
+                // Thành công → hiện màn hình thành công
+                wallet.showSuccess('Tạo ví an toàn thành công!');
+                setTimeout(() => wallet.showWalletCreationSuccess(result), 800);
+
+            } catch (err) {
+                console.error('Tạo ví thất bại:', err);
+                wallet.showError('Tạo ví thất bại: ' + (err.message || 'Lỗi không xác định'));
+                createBtn.disabled = false;
+                createBtn.innerHTML = 'Tạo Ví An Toàn';
+            }
+        });
     }
 
+    // THAY TOÀN BỘ HÀM NÀY TRONG app.js
     showSecureImport() {
         document.getElementById('app').innerHTML = `
             <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
                 <div class="w-full max-w-2xl fade-in">
                     <button onclick="wallet.showHome()" class="mb-6 btn-secondary">
-                        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+                        Quay lại
                     </button>
 
                     <div class="card">
                         <div class="text-center mb-8">
-                            <div class="text-6xl mb-4">🔑</div>
+                            <div class="text-6xl mb-4">Key</div>
                             <h2 class="text-4xl font-bold mb-2">Nhập Ví An Toàn</h2>
                             <p class="text-gray-600">Nhập ví đã được mã hóa</p>
                         </div>
@@ -364,14 +428,14 @@ class Wallet {
                             <!-- File Upload -->
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-3">
-                                    <i class="fas fa-file-upload mr-2"></i>File Ví Đã Mã Hóa
+                                    File Ví Đã Mã Hóa
                                 </label>
                                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                                     <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
                                     <p class="text-gray-600 mb-4">Kéo thả file ví vào đây hoặc click để chọn</p>
                                     <input type="file" id="walletFile" accept=".json" class="hidden">
-                                    <button onclick="document.getElementById('walletFile').click()" class="btn-secondary">
-                                        <i class="fas fa-folder-open mr-2"></i> Chọn File
+                                    <button type="button" id="chooseFileBtn" class="btn-secondary">
+                                        Chọn File
                                     </button>
                                 </div>
                             </div>
@@ -379,30 +443,39 @@ class Wallet {
                             <!-- Manual Input -->
                             <div class="text-center">
                                 <p class="text-gray-500 mb-4">Hoặc nhập trực tiếp:</p>
-                                <button onclick="wallet.showManualSecureImport()" class="btn-secondary">
-                                    <i class="fas fa-keyboard mr-2"></i> Nhập Thủ Công
+                                <button type="button" id="manualImportBtn" class="btn-secondary">
+                                    Nhập thủ công
                                 </button>
                             </div>
-                        </div>
-
-                        <div id="fileContent" class="mt-6 hidden">
-                            <textarea id="encryptedWalletData" rows="8" class="w-full p-4 border-2 border-gray-300 rounded-lg font-mono text-sm" placeholder="Dữ liệu ví đã mã hóa..."></textarea>
                         </div>
                     </div>
                 </div>
             </div>
         `;
 
-        // Setup file upload
-        document.getElementById('walletFile').addEventListener('change', (e) => {
+        // DÙNG addEventListener THAY VÌ onclick → this đúng 100%
+        document.getElementById('chooseFileBtn')?.addEventListener('click', () => {
+            document.getElementById('walletFile').click();
+        });
+
+        document.getElementById('manualImportBtn')?.addEventListener('click', () => {
+            this.showManualSecureImport(); // this ở đây là wallet (SecureWallet)
+        });
+
+        // Xử lý chọn file
+        document.getElementById('walletFile')?.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    document.getElementById('encryptedWalletData').value = event.target.result;
-                    document.getElementById('fileContent').classList.remove('hidden');
-                };
-                reader.readAsText(file);
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (!data.encryptedPrivateKey || !data.address) {
+                    throw new Error('File không đúng định dạng');
+                }
+                this.showSecureImportPassword(data); // gọi đúng this
+            } catch (err) {
+                this.showError('File không hợp lệ: ' + err.message);
             }
         });
     }
@@ -459,51 +532,6 @@ class Wallet {
                 </div>
             </div>
         `;
-    }
-
-    checkPasswordStrength(password) {
-        const strength = this.validatePasswordStrength(password);
-        const strengthDiv = document.getElementById('passwordStrength');
-        
-        if (!strengthDiv) return;
-        
-        let html = '<div class="mt-2">';
-        html += `<span class="password-strength-${strength.strength}">`;
-        html += `Mật khẩu: ${strength.strength === 'weak' ? 'Yếu' : strength.strength === 'medium' ? 'Trung bình' : 'Mạnh'}</span>`;
-        
-        if (strength.recommendations.length > 0) {
-            html += '<ul class="text-xs text-gray-500 mt-1">';
-            strength.recommendations.forEach(rec => {
-                html += `<li>• ${rec}</li>`;
-            });
-            html += '</ul>';
-        }
-        
-        html += '</div>';
-        strengthDiv.innerHTML = html;
-    }
-
-    validatePasswordStrength(password) {
-        const checks = {
-            length: password.length >= 8,
-            uppercase: /[A-Z]/.test(password),
-            lowercase: /[a-z]/.test(password),
-            numbers: /\d/.test(password),
-            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-        };
-
-        const score = Object.values(checks).filter(Boolean).length;
-        
-        return {
-            score: score,
-            strength: score <= 2 ? 'weak' : score <= 4 ? 'medium' : 'strong',
-            checks: checks,
-            recommendations: score < 5 ? [
-                'Sử dụng ít nhất 8 ký tự',
-                'Bao gồm chữ hoa và chữ thường',
-                'Thêm số và ký tự đặc biệt'
-            ] : []
-        };
     }
 
     async handleSecureCreate(event) {
@@ -1860,31 +1888,59 @@ class Wallet {
             return;
         }
         
+        // Kiểm tra số lượng
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+            this.showError('Số lượng ETH không hợp lệ');
+            return;
+        }
+
         try {
             // Show loading state
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...';
-            
+
+            // Kiểm tra số dư trước khi gửi
+            const balance = await this.provider.getBalance(this.wallet.address);
+            const value = ethers.parseEther(amount);
+            if (balance < value) {
+                throw new Error("Số dư không đủ để thực hiện giao dịch!");
+            }
+
+            this.showSuccess('Đang gửi giao dịch lên blockchain...');
+
             const tx = await this.signer.sendTransaction({
                 to: recipient,
-                value: ethers.parseEther(amount)
+                value: value
             });
-            
-            this.showSuccess(`Đã gửi ${amount} ETH đến ${recipient.substring(0, 6)}...`);
-            await tx.wait();
+
+            // === HIỆN MODAL THEO DÕI GIAO DỊCH SIÊU ĐẸP ===
+            this.showLiveTransactionTracker(tx.hash);
+
+            // Đợi đủ 12 confirmations (Hardhat nhanh, chỉ 10-20 giây)
+            const receipt = await tx.wait(12);
+
+            console.log("%cĐang ký giao dịch bằng private key thật:", "color:purple; font-weight:bold", this.wallet.privateKey.substring(0,10)+"...");
+
+            // Thành công hoàn toàn!
+            this.showSuccess(`Giao dịch thành công! Đã xác nhận ${receipt.confirmations} lần`);
             await this.updateBalance();
             this.showDashboard();
+
+            // Reset form
+            document.getElementById('amount').value = '';
+            document.getElementById('recipient').value = '';
+
         } catch (e) {
             console.error('Lỗi gửi giao dịch:', e);
             this.showError('Gửi tiền thất bại: ' + (e.message || 'Lỗi không xác định'));
             
-            // Reset button state
+            // Reset nút gửi
             const submitBtn = e.target.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Gửi';
+                submitBtn.innerHTML = 'Gửi Tiền Ngay';
             }
         }
     }
@@ -2261,10 +2317,56 @@ class Wallet {
             this.showHome();
         }
     }
+
+    showLiveTransactionTracker(txHash) {
+        const modalId = 'tx-tracker-' + Date.now();
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white rounded-3xl p-10 max-w-lg w-full mx-4 shadow-2xl text-center">
+                <i class="fas fa-satellite-dish text-8xl text-purple-600 animate-pulse mb-6"></i>
+                <h2 class="text-3xl font-bold mb-8 text-gray-800">Đang xử lý giao dịch trên Blockchain</h2>
+                
+                <div class="space-y-6 text-left text-lg font-medium">
+                    <div class="flex items-center gap-4"><i class="fas fa-check-circle text-green-600 text-2xl"></i> Đã tạo giao dịch</div>
+                    <div class="flex items-center gap-4"><i class="fas fa-paper-plane text-blue-600 text-2xl"></i> Đã gửi vào Mempool</div>
+                    <div class="flex items-center gap-4"><i class="fas fa-spinner animate-spin text-yellow-600 text-2xl"></i> <span id="confirm-text">Đang chờ xác nhận... (0/12)</span></div>
+                    <div class="flex items-center gap-4 text-gray-400"><i class="fas fa-cubes text-2xl"></i> Chưa hoàn tất</div>
+                </div>
+
+                <div class="mt-8 p-5 bg-gray-100 rounded-xl font-mono text-sm break-all">
+                    Tx Hash: ${txHash.slice(0,12)}...${txHash.slice(-10)}
+                    <button onclick="navigator.clipboard.writeText('${txHash}')" class="ml-3 text-indigo-600 font-bold hover:underline">Copy</button>
+                </div>
+
+                <button onclick="document.getElementById('${modalId}')?.remove()" class="mt-6 text-gray-500 hover:text-gray-700 text-sm">Đóng</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        let confirmed = 0;
+        const interval = setInterval(async () => {
+            try {
+                const receipt = await this.provider.getTransactionReceipt(txHash);
+                if (receipt) {
+                    const currentBlock = await this.provider.getBlockNumber();
+                    confirmed = currentBlock - receipt.blockNumber + 1;
+                    document.getElementById('confirm-text').textContent = `Đang chờ xác nhận... (${confirmed}/12)`;
+
+                    if (confirmed >= 12) {
+                        modal.querySelector('.space-y-6 > div:last-child').innerHTML = 
+                            '<i class="fas fa-check-double text-green-600 text-3xl"></i> <span class="font-bold text-green-600 text-xl">ĐÃ XÁC NHẬN HOÀN TOÀN!</span>';
+                        clearInterval(interval);
+                        setTimeout(() => modal.remove(), 5000);
+                    }
+                }
+            } catch (e) {}
+        }, 1000);
+    }
 }
 
-const wallet = new Wallet();
-window.wallet = wallet; // Make wallet globally available
+
 
 document.addEventListener('DOMContentLoaded', () => {
     wallet.init();

@@ -2,6 +2,10 @@
 
 > **Đề tài môn học:** Xây dựng cơ chế mã hóa dữ liệu end-to-end trong ứng dụng web – Demo với Web Crypto API
 
+# Danh sách thành viên:
+- **Dương Khải Anh - MSV:22810350161 - Xây dựng backend, mã hoá end-to-end**
+- **Hoàng Hải Dương - MSV:22810310242 - Xây dựng frontend, mã hoá end-to-end**
+
 ## 🎯 Tổng Quan Dự Án
 
 HUST Secure Wallet là một ví tiền điện tử nâng cao với tích hợp đầy đủ Web Crypto API để đảm bảo bảo mật end-to-end. Dự án này demo thực tế việc áp dụng các thuật toán mã hóa hiện đại vào ứng dụng web.
